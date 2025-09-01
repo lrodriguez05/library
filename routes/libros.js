@@ -41,9 +41,7 @@ router.post("/libros/prestar", async (req, res) => {
         .status(400)
         .json({ message: "El libro solicitado ya esta prestado" });
     }
-    res
-      .status(500)
-      .json(`Ocurrio un error al prestar el libro seleccionado: `, err.message);
+    res.status(500).json(`Ocurrio un error al prestar el libro: `, err.message);
   }
 });
 
