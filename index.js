@@ -1,10 +1,9 @@
 const express = require("express");
 const cors = require("cors");
-const jwt = require("jsonwebtoken");
 require("dotenv").config();
-const db = require("./db");
 const authRoutes = require("./routes/auth");
 const libRoutes = require("./routes/lib/lib");
+const auth = require("./routes/middleware/token");
 
 const app = express();
 const PORT = 3001;
@@ -14,8 +13,8 @@ app.use(cors());
 app.use(express.json());
 
 // Rutas
-app.use("/", authRoutes(db)); // <-- Inyecta la base de datos en las rutas
-app.use("/lib", libRoutes);
+app.use("/", authRoutes);
+app.use("/lib", auth, libRoutes);
 
 // Ruta de prueba
 app.get("/", (_, res) => {
