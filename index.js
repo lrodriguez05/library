@@ -1,9 +1,10 @@
 const express = require("express");
 const cors = require("cors");
-const db = require("./db"); // <-- Importa la base de datos
-const authRoutes = require("./routes/auth"); // <-- Importa las rutas
-const librosRoutes = require("./routes/libros");
-const sedesRoutes = require("./routes/sedes");
+const jwt = require("jsonwebtoken");
+require("dotenv").config();
+const db = require("./db");
+const authRoutes = require("./routes/auth");
+const libRoutes = require("./routes/lib/lib");
 
 const app = express();
 const PORT = 3001;
@@ -14,11 +15,10 @@ app.use(express.json());
 
 // Rutas
 app.use("/", authRoutes(db)); // <-- Inyecta la base de datos en las rutas
-app.use("/", librosRoutes);
-app.use("/", sedesRoutes);
+app.use("/lib", libRoutes);
 
 // Ruta de prueba
-app.get("/", (req, res) => {
+app.get("/", (_, res) => {
   res.send("Servidor funcionando correctamente");
 });
 
