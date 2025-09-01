@@ -21,7 +21,7 @@ router.post("/libros", async (req, res) => {
 router.get("/libros", async (req, res) => {
   try {
     const libros = await biblioteca.verLibros();
-    res.status(201).json({ message: `Libros en la biblioteca`, libros });
+    res.status(200).json({ message: `Libros en la biblioteca`, libros });
   } catch (err) {
     res.status(500).json({ message: "Error al obtener el listado de libros" });
   }
