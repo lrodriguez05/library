@@ -39,7 +39,7 @@ router.post("/libros/prestar", async (req, res) => {
     if (err.message === "Ese libro ya se encuentra prestado") {
       return res
         .status(400)
-        .json({ message: "El libro solicitado ya esta prestado" });
+        .json({ message: "El libro solicitado ya esta prestado :)" });
     }
     res.status(500).json(`Ocurrio un error al prestar el libro: `, err.message);
   }
@@ -51,7 +51,7 @@ router.post("/libros/devolver", async (req, res) => {
     const libro = await biblioteca.devolverLibro(id);
     res.status(201).json({ message: `Libro devuelto`, libro });
   } catch (err) {
-    if (err.message === "No se ha encontrado el libro solicitado") {
+    if (err.message === "No se ha encontrado el libro") {
       return res.status(400).json({ message: "Libro no encontrado" });
     }
     if (err.message === "Ese libro ya se encuentra disponible") {
