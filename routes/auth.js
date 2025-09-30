@@ -6,13 +6,13 @@ const db = require("../db");
 
 // Registro
 router.post("/register", async (req, res) => {
-  const { username, password } = req.body;
+  const { name, last_name, username, password } = req.body;
 
   try {
     const hashedPassword = await bcrypt.hash(password, 10);
     db.run(
-      `INSERT INTO users (username, password) VALUES (?, ?)`,
-      [username, hashedPassword],
+      `INSERT INTO users (name, last_name, username, password) VALUES (?, ?, ?, ?)`,
+      [name, last_name, username, hashedPassword],
       function (err) {
         if (err) {
           return res.status(400).json({ message: "Usuario ya existe" });
