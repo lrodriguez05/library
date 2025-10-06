@@ -3,6 +3,7 @@ const cors = require("cors");
 require("dotenv").config();
 const authRoutes = require("./routes/auth");
 const libRoutes = require("./routes/lib/lib");
+const userRoutes = require("./routes/user/user");
 const auth = require("./routes/middleware/token");
 
 const app = express();
@@ -15,6 +16,7 @@ app.use(express.json());
 // Rutas
 app.use("/", authRoutes);
 app.use("/lib", auth, libRoutes);
+app.use("/users", auth, userRoutes);
 
 // Ruta de prueba
 app.get("/", (_, res) => {

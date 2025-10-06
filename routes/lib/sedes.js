@@ -4,6 +4,15 @@ const router = express.Router();
 
 const biblioteca = new Biblioteca("Jose Marti");
 
+router.get("/sedes", async (req, res) => {
+  try {
+    const sedes = await biblioteca.listarSedes();
+    res.status(200).json({ message: `Sedes en la biblioteca`, sedes });
+  } catch (err) {
+    res.status(500).json({ message: "Error al obtener el listado de sedes" });
+  }
+});
+
 router.post("/sedes/crearSede", async (req, res) => {
   const { nombre } = req.body;
 

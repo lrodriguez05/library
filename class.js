@@ -199,5 +199,18 @@ class Biblioteca {
       });
     });
   }
+
+  async listarSedes() {
+    const query = `SELECT * FROM sedes`;
+    return new Promise((resolve, reject) => {
+      db.all(query, (err, rows) => {
+        if (err) {
+          console.log("Ocurrio un error al obtener sedes:", err.message);
+          return reject(err);
+        }
+        resolve(rows);
+      });
+    });
+  }
 }
 module.exports = Biblioteca;

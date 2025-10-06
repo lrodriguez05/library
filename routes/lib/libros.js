@@ -27,7 +27,7 @@ router.get("/libros", async (req, res) => {
   }
 });
 
-router.post("/libros/prestar", async (req, res) => {
+router.post("/libros/prestar/:id", async (req, res) => {
   const { id } = req.body;
   try {
     const libro = await biblioteca.prestarLibro(id);
@@ -45,7 +45,7 @@ router.post("/libros/prestar", async (req, res) => {
   }
 });
 
-router.post("/libros/devolver", async (req, res) => {
+router.post("/libros/devolver/:id", async (req, res) => {
   const { id } = req.body;
   try {
     const libro = await biblioteca.devolverLibro(id);
@@ -69,10 +69,10 @@ router.get("/libros/id", async (req, res) => {
   const { id } = req.body;
   try {
     const libro = await biblioteca.porId(id);
-    res.status(201).json({ message: `Libro encontrado`, libro });
+    res.status(200).json({ message: `Libro encontrado`, libro });
   } catch (err) {
     if (err.message === "Libro no encontrado") {
-      return res.status(400).json({ message: "Libro no encontrado" });
+      return res.status(404).json({ message: "Libro no encontrado" });
     }
     res.status(500).json({
       message: "Ocurrio un error al obtener el libro",
