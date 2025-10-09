@@ -93,8 +93,8 @@ router.get("/libros/idSede", async (req, res) => {
   }
 });
 
-router.delete("/libros", async (req, res) => {
-  const { id } = req.body;
+router.delete("/libros/:id", async (req, res) => {
+  const { id } = req.params;
 
   if (!id) {
     return res.status(400).json({ message: "Faltan campos por rellenar" });

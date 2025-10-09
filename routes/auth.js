@@ -15,7 +15,9 @@ router.post("/register", async (req, res) => {
       [name, last_name, username, hashedPassword],
       function (err) {
         if (err) {
-          return res.status(400).json({ message: "Usuario ya existe" });
+          return res
+            .status(400)
+            .json({ message: "Ese nombre de usuario ya esta en uso" });
         }
         res.json({ message: "Usuario creado con éxito" });
       }
@@ -49,7 +51,7 @@ router.post("/login", async (req, res) => {
           token,
         });
       } else {
-        res.status(401).json({ message: "Contraseña incorrecta" });
+        res.status(401).json({ message: "Usuario o contraseña incorrecta" });
       }
     }
   );
