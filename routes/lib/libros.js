@@ -28,7 +28,7 @@ router.get("/libros", async (req, res) => {
 });
 
 router.post("/libros/prestar/:id", async (req, res) => {
-  const { id } = req.body;
+  const { id } = req.params;
   try {
     const libro = await biblioteca.prestarLibro(id);
     res.status(201).json({ message: `Libro prestado`, libro });
@@ -46,7 +46,7 @@ router.post("/libros/prestar/:id", async (req, res) => {
 });
 
 router.post("/libros/devolver/:id", async (req, res) => {
-  const { id } = req.body;
+  const { id } = req.params;
   try {
     const libro = await biblioteca.devolverLibro(id);
     res.status(201).json({ message: `Libro devuelto`, libro });
@@ -65,8 +65,8 @@ router.post("/libros/devolver/:id", async (req, res) => {
   }
 });
 
-router.get("/libros/id", async (req, res) => {
-  const { id } = req.body;
+router.get("/libros/:id", async (req, res) => {
+  const { id } = req.params;
   try {
     const libro = await biblioteca.porId(id);
     res.status(200).json({ message: `Libro encontrado`, libro });
@@ -80,6 +80,7 @@ router.get("/libros/id", async (req, res) => {
     });
   }
 });
+
 router.get("/libros/idSede", async (req, res) => {
   const { id } = req.body;
   try {
@@ -110,6 +111,41 @@ router.delete("/libros/:id", async (req, res) => {
       message: "Ocurrio un error al eliminar el libro",
       error: err.message,
     });
+  }
+});
+
+router.patch("/libros/:id", async (req, res) => {
+  const { id } = req.params;
+  const { titulo, autor, sede_id } = req.body;
+
+  if (!titulo && !autor && !sede_id) {
+    return res
+      .status(400)
+      .json({ message: "Debes enviar al menos un campo para actualizar" });
+  }
+
+  try {
+    const actualizado = await biblioteca.editarLibro(id, {
+      titulo,
+      autor,
+      sede_id,
+    });
+
+    if (actualizado === false) {
+      // Caso cuando el libro está prestado y no se puede editar
+      return res
+        .status(400)
+        .json({ message: "No se puede editar un libro prestado" });
+    }
+
+    res.status(200).json({ message: "Libro actualizado correctamente" });
+  } catch (error) {
+    if (error.message === "Libro no encontrado") {
+      return res.status(404).json({ message: "Libro no encontrado" });
+    }
+
+    console.error("Error al editar libro:", error.message);
+    res.status(500).json({ message: "Error interno del servidor" });
   }
 });
 

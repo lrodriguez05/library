@@ -176,6 +176,52 @@ class Biblioteca {
     });
   }
 
+  async editarLibro(id, nuevosDatos) {
+    const { titulo, autor, sede_id } = nuevosDatos;
+
+    const queryCheck = `SELECT * FROM libros WHERE id = ?`;
+    const queryUpdate = `
+    UPDATE libros 
+    SET titulo = ?, autor = ?, sede_id = ?
+    WHERE id = ?
+  `;
+
+    return new Promise((resolve, reject) => {
+      db.get(queryCheck, [id], (err, libro) => {
+        if (err) {
+          console.log("Error al buscar el libro:", err.message);
+          return reject(err);
+        }
+
+        if (!libro) {
+          console.log("Libro no encontrado");
+          return reject(new Error("Libro no encontrado"));
+        }
+
+        // Puedes decidir si permites editar un libro prestado o no
+        if (libro.prestado) {
+          console.log("No se puede editar un libro prestado");
+          return resolve(false);
+        }
+
+        // Si el usuario no envía algún dato, se mantiene el valor anterior
+        const nuevoTitulo = titulo || libro.titulo;
+        const nuevoAutor = autor || libro.autor;
+        const nuevaSede = sede_id || libro.sede_id;
+
+        db.run(queryUpdate, [nuevoTitulo, nuevoAutor, nuevaSede, id], (err) => {
+          if (err) {
+            console.log("Error al actualizar el libro:", err.message);
+            return reject(err);
+          }
+
+          console.log("Libro actualizado correctamente");
+          resolve(true);
+        });
+      });
+    });
+  }
+
   async crearSede(nombre) {
     const queryCheck = `SELECT * FROM sedes WHERE nombre = ?`;
     return new Promise((resolve, reject) => {
