@@ -116,9 +116,9 @@ router.delete("/libros/:id", async (req, res) => {
 
 router.patch("/libros/:id", async (req, res) => {
   const { id } = req.params;
-  const { titulo, autor, sede_id } = req.body;
+  const { titulo, autor, id_sede } = req.body;
 
-  if (!titulo && !autor && !sede_id) {
+  if (!titulo && !autor && !id_sede) {
     return res
       .status(400)
       .json({ message: "Debes enviar al menos un campo para actualizar" });
@@ -128,7 +128,7 @@ router.patch("/libros/:id", async (req, res) => {
     const actualizado = await biblioteca.editarLibro(id, {
       titulo,
       autor,
-      sede_id,
+      id_sede,
     });
 
     if (actualizado === false) {

@@ -177,12 +177,12 @@ class Biblioteca {
   }
 
   async editarLibro(id, nuevosDatos) {
-    const { titulo, autor, sede_id } = nuevosDatos;
+    const { titulo, autor, id_sede } = nuevosDatos;
 
     const queryCheck = `SELECT * FROM libros WHERE id = ?`;
     const queryUpdate = `
     UPDATE libros 
-    SET titulo = ?, autor = ?, sede_id = ?
+    SET titulo = ?, autor = ?, id_sede = ?
     WHERE id = ?
   `;
 
@@ -207,7 +207,7 @@ class Biblioteca {
         // Si el usuario no envía algún dato, se mantiene el valor anterior
         const nuevoTitulo = titulo || libro.titulo;
         const nuevoAutor = autor || libro.autor;
-        const nuevaSede = sede_id || libro.sede_id;
+        const nuevaSede = id_sede || libro.id_sede;
 
         db.run(queryUpdate, [nuevoTitulo, nuevoAutor, nuevaSede, id], (err) => {
           if (err) {
