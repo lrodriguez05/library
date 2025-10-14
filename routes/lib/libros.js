@@ -1,4 +1,5 @@
 const express = require("express");
+const { authorizeRole, authenticateToken } = require("../middleware/token");
 const Biblioteca = require("../../class");
 const router = express.Router();
 
@@ -94,7 +95,7 @@ router.get("/libros/idSede", async (req, res) => {
   }
 });
 
-router.delete("/libros/:id", async (req, res) => {
+router.delete("/libros/:id", authorizeRole("admin"), async (req, res) => {
   const { id } = req.params;
 
   if (!id) {
@@ -114,7 +115,7 @@ router.delete("/libros/:id", async (req, res) => {
   }
 });
 
-router.patch("/libros/:id", async (req, res) => {
+router.patch("/libros/:id", authorizeRole("admin"), async (req, res) => {
   const { id } = req.params;
   const { titulo, autor, id_sede } = req.body;
 
