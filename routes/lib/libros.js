@@ -6,13 +6,18 @@ const router = express.Router();
 const biblioteca = new Biblioteca("Jose Marti");
 
 router.post("/libros", async (req, res) => {
-  const { titulo, autor, sede_id } = req.body;
+  const { titulo, autor, sede_id, cantidad } = req.body;
 
-  if (!titulo || !autor || !sede_id) {
+  if (!titulo || !autor || !sede_id || !cantidad) {
     return res.status(400).json({ message: "Faltan campos por rellenar" });
   }
   try {
-    const libroId = await biblioteca.agregarLibro(titulo, autor, sede_id);
+    const libroId = await biblioteca.agregarLibro(
+      titulo,
+      autor,
+      sede_id,
+      cantidad
+    );
     res.status(201).json({ message: `Libro agregado`, id: libroId });
   } catch (err) {
     res.status(500).json({ message: "Error al agregar el libro", id: libroId });
@@ -117,9 +122,9 @@ router.delete("/libros/:id", authorizeRole("admin"), async (req, res) => {
 
 router.patch("/libros/:id", authorizeRole("admin"), async (req, res) => {
   const { id } = req.params;
-  const { titulo, autor, id_sede } = req.body;
+  const { titulo, autor, id_sede, cantidad } = req.body;
 
-  if (!titulo && !autor && !id_sede) {
+  if (!titulo && !autor && !id_sede && !cantidad) {
     return res
       .status(400)
       .json({ message: "Debes enviar al menos un campo para actualizar" });
@@ -130,6 +135,7 @@ router.patch("/libros/:id", authorizeRole("admin"), async (req, res) => {
       titulo,
       autor,
       id_sede,
+      cantidad,
     });
 
     if (actualizado === false) {

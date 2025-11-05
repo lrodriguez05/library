@@ -5,11 +5,11 @@ class Biblioteca {
     this.nombre = nombre;
   }
 
-  async agregarLibro(titulo, autor, id_sede) {
-    const query = `INSERT INTO libros (titulo, autor, prestado, id_sede) VALUES (?, ?, 0, ?)`;
+  async agregarLibro(titulo, autor, id_sede, cantidad) {
+    const query = `INSERT INTO libros (titulo, autor, prestado, id_sede, cantidad) VALUES (?, ?, 0, ?, ?)`;
 
     return new Promise((resolve, reject) => {
-      db.run(query, [titulo, autor, id_sede], function (err) {
+      db.run(query, [titulo, autor, id_sede, cantidad], function (err) {
         if (err) {
           console.error("Ocurrio un error al agregar el libro: ", err.message);
           return reject(err);
@@ -70,9 +70,12 @@ class Biblioteca {
 
   async verLibros() {
     const query = `
-     SELECT libros.id, libros.titulo, libros.autor, libros.prestado, sedes.nombre AS sede
+     SELECT libros.*, sedes.nombre AS sede,COUNT(prestamos.id) AS veces_prestado
      FROM libros
      LEFT JOIN sedes ON libros.id_sede = sedes.id
+     LEFT JOIN prestamos 
+     ON libros.id = prestamos.id_libro AND prestamos.devuelto = 0
+     GROUP BY libros.id, libros.titulo
     `;
 
     return new Promise((resolve, reject) => {
@@ -91,7 +94,9 @@ class Biblioteca {
                 libro.autor
               } | Sede: ${libro.sede || "Ninguna"} | Estado: ${
                 libro.prestado ? "Prestado" : "Disponible"
-              } `
+              } Cantidad: ${libro.cantidad} Veces prestado: ${
+                libro.veces_prestado
+              }`
             );
           });
         }
@@ -177,12 +182,12 @@ class Biblioteca {
   }
 
   async editarLibro(id, nuevosDatos) {
-    const { titulo, autor, id_sede } = nuevosDatos;
+    const { titulo, autor, id_sede, cantidad } = nuevosDatos;
 
     const queryCheck = `SELECT * FROM libros WHERE id = ?`;
     const queryUpdate = `
     UPDATE libros 
-    SET titulo = ?, autor = ?, id_sede = ?
+    SET titulo = ?, autor = ?, id_sede = ?, cantidad = ?
     WHERE id = ?
   `;
 
@@ -208,16 +213,22 @@ class Biblioteca {
         const nuevoTitulo = titulo || libro.titulo;
         const nuevoAutor = autor || libro.autor;
         const nuevaSede = id_sede || libro.id_sede;
+        const nuevaCantidad =
+          cantidad !== undefined ? cantidad : libro.cantidad;
 
-        db.run(queryUpdate, [nuevoTitulo, nuevoAutor, nuevaSede, id], (err) => {
-          if (err) {
-            console.log("Error al actualizar el libro:", err.message);
-            return reject(err);
+        db.run(
+          queryUpdate,
+          [nuevoTitulo, nuevoAutor, nuevaSede, nuevaCantidad, id],
+          (err) => {
+            if (err) {
+              console.log("Error al actualizar el libro:", err.message);
+              return reject(err);
+            }
+
+            console.log("Libro actualizado correctamente");
+            resolve(true);
           }
-
-          console.log("Libro actualizado correctamente");
-          resolve(true);
-        });
+        );
       });
     });
   }
@@ -258,5 +269,125 @@ class Biblioteca {
       });
     });
   }
+
+  async listaPrestamos() {
+    const query = `SELECT * FROM prestamos`;
+    return new Promise((resolve, reject) => {
+      db.all(query, (err, rows) => {
+        if (err) {
+          console.log("Ocurrio un error al obtener prestamos:", err.message);
+          return reject(err);
+        }
+        resolve(rows);
+      });
+    });
+  }
+
+  async listaPrestamosUsuario(id) {
+    const query = `SELECT * FROM prestamos WHERE usuario = ?`;
+    return new Promise((resolve, reject) => {
+      db.all(query, [id], (err, rows) => {
+        if (err) {
+          console.log("Ocurrio un error al obtener prestamos:", err.message);
+          return reject(err);
+        }
+        resolve(rows);
+      });
+    });
+  }
+
+  async registrarPrestamo(id, usuario, fecha_devolucion) {
+    const queryLibro = `SELECT * FROM libros WHERE id = ?`;
+    const queryPrestamosActivos = `
+    SELECT COUNT(*) AS total 
+    FROM prestamos 
+    WHERE id_libro = ? AND devuelto = 0
+  `;
+    const queryInsert = `
+    INSERT INTO prestamos (id_libro, usuario, fecha_prestamo, fecha_devolucion)
+    VALUES (?, ?, ?, ?)
+  `;
+
+    return new Promise((resolve, reject) => {
+      // 1️⃣ Buscar el libro
+      db.get(queryLibro, [id], (err, libro) => {
+        if (err) {
+          console.error("Error al obtener libro:", err.message);
+          return reject(err);
+        }
+
+        if (!libro) {
+          console.warn("Libro no encontrado");
+          return reject(new Error("Libro no encontrado"));
+        }
+
+        // 2️⃣ Contar préstamos activos de ese libro
+        db.get(queryPrestamosActivos, [id], (err, row) => {
+          if (err) {
+            console.error("Error al contar préstamos:", err.message);
+            return reject(err);
+          }
+
+          const prestamosActivos = row.total;
+
+          // 3️⃣ Si ya no hay copias disponibles
+          if (prestamosActivos >= libro.cantidad) {
+            console.warn("No hay ejemplares disponibles para préstamo.");
+            return reject(
+              new Error("No hay ejemplares disponibles para préstamo.")
+            );
+          }
+
+          // 4️⃣ Registrar el nuevo préstamo
+          const fechaPrestamo = new Date().toISOString(); // ahora mismo
+          const fechaDevolucion = new Date(fecha_devolucion).toISOString();
+
+          db.run(
+            queryInsert,
+            [id, usuario, fechaPrestamo, fechaDevolucion],
+            function (err) {
+              if (err) {
+                console.error("Error al registrar el préstamo:", err.message);
+                return reject(err);
+              }
+
+              console.log("Préstamo registrado con ID:", this.lastID);
+              resolve(this.lastID);
+            }
+          );
+        });
+      });
+    });
+  }
+
+  async devolverPrestamo(id) {
+    const queryCheck = `SELECT * FROM prestamos WHERE id = ?`;
+    const queryUpdate = `UPDATE prestamos SET devuelto = 1 WHERE id = ?`;
+
+    return new Promise((resolve, reject) => {
+      db.get(queryCheck, [id], (err, prestamo) => {
+        if (err) {
+          console.log("Ocurrio un error al obtener el prestamo", err.message);
+          return reject(err);
+        }
+        if (!prestamo) {
+          console.log("No se ha encontrado el prestamo");
+          return reject(new Error("No se ha encontrado el prestamo"));
+        }
+        db.run(queryUpdate, [id], (err) => {
+          if (err) {
+            console.log(
+              "Ocurrio un error al devolver el prestamo",
+              err.message
+            );
+            return reject(err);
+          }
+          console.log("Prestamo devuelto correctamente");
+          resolve(prestamo);
+        });
+      });
+    });
+  }
 }
+
 module.exports = Biblioteca;
