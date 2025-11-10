@@ -16,7 +16,7 @@ router.post("/register", async (req, res) => {
       function (err) {
         if (err) {
           return res
-            .status(400)
+            .status(409)
             .json({ message: "Ese nombre de usuario ya esta en uso" });
         }
         res.json({ message: "Usuario creado con éxito" });

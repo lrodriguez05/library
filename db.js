@@ -14,6 +14,10 @@ db.run(`CREATE TABLE IF NOT EXISTS libros (
     autor TEXT NOT NULL,
     prestado INTEGER DEFAULT 0,
     cantidad INTEGER NOT NULL DEFAULT 1,
+    detalles TEXT DEFAULT 'No hay detalles disponibles.',
+    edicion TEXT DEFAULT 'Desconocida',
+    anio_publicacion TEXT DEFAULT 'Desconocido',
+    imagen TEXT DEFAULT 'https://www.klett-cotta.de/assets/default-image.jpg',
     id_sede INTEGER,
     FOREIGN KEY (id_sede) REFERENCES sedes(id)
 )`);
@@ -25,6 +29,17 @@ db.run(`CREATE TABLE IF NOT EXISTS prestamos (
     fecha_prestamo TEXT,
     fecha_devolucion TEXT,
     devuelto INTEGER DEFAULT 0,
+    FOREIGN KEY (id_libro) REFERENCES libros(id),
+    FOREIGN KEY (usuario) REFERENCES users(id)
+)`);
+
+db.run(`CREATE TABLE IF NOT EXISTS resenas (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    id_libro INTEGER,
+    usuario TEXT,
+    calificacion INTEGER DEFAULT 0,
+    comentario TEXT,
+    fecha TEXT,
     FOREIGN KEY (id_libro) REFERENCES libros(id),
     FOREIGN KEY (usuario) REFERENCES users(id)
 )`);

@@ -5,18 +5,43 @@ class Biblioteca {
     this.nombre = nombre;
   }
 
-  async agregarLibro(titulo, autor, id_sede, cantidad) {
-    const query = `INSERT INTO libros (titulo, autor, prestado, id_sede, cantidad) VALUES (?, ?, 0, ?, ?)`;
+  async agregarLibro(
+    titulo,
+    autor,
+    id_sede,
+    cantidad,
+    detalles,
+    edicion,
+    anio_publicacion,
+    imagen
+  ) {
+    const query = `INSERT INTO libros (titulo, autor, prestado, id_sede, cantidad, detalles, edicion, anio_publicacion, imagen) VALUES (?, ?, 0, ?, ?, ?, ?, ?, ?)`;
 
     return new Promise((resolve, reject) => {
-      db.run(query, [titulo, autor, id_sede, cantidad], function (err) {
-        if (err) {
-          console.error("Ocurrio un error al agregar el libro: ", err.message);
-          return reject(err);
+      db.run(
+        query,
+        [
+          titulo,
+          autor,
+          id_sede,
+          cantidad,
+          detalles,
+          edicion,
+          anio_publicacion,
+          imagen,
+        ],
+        function (err) {
+          if (err) {
+            console.error(
+              "Ocurrio un error al agregar el libro: ",
+              err.message
+            );
+            return reject(err);
+          }
+          console.log(`Libro agregado con el ID: ${this.lastID}`);
+          resolve(this.lastID);
         }
-        console.log(`Libro agregado con el ID: ${this.lastID}`);
-        resolve(this.lastID);
-      });
+      );
     });
   }
 
@@ -182,12 +207,21 @@ class Biblioteca {
   }
 
   async editarLibro(id, nuevosDatos) {
-    const { titulo, autor, id_sede, cantidad } = nuevosDatos;
+    const {
+      titulo,
+      autor,
+      id_sede,
+      cantidad,
+      detalles,
+      edicion,
+      anio_publicacion,
+      imagen,
+    } = nuevosDatos;
 
     const queryCheck = `SELECT * FROM libros WHERE id = ?`;
     const queryUpdate = `
     UPDATE libros 
-    SET titulo = ?, autor = ?, id_sede = ?, cantidad = ?
+    SET titulo = ?, autor = ?, id_sede = ?, cantidad = ?, detalles = ?, edicion = ?, anio_publicacion = ?, imagen = ?
     WHERE id = ?
   `;
 
@@ -215,10 +249,24 @@ class Biblioteca {
         const nuevaSede = id_sede || libro.id_sede;
         const nuevaCantidad =
           cantidad !== undefined ? cantidad : libro.cantidad;
+        const nuevosDetalles = detalles || libro.detalles;
+        const nuevaEdicion = edicion || libro.edicion;
+        const nuevoAnioPublicacion = anio_publicacion || libro.anio_publicacion;
+        const nuevaImagen = imagen || libro.imagen;
 
         db.run(
           queryUpdate,
-          [nuevoTitulo, nuevoAutor, nuevaSede, nuevaCantidad, id],
+          [
+            nuevoTitulo,
+            nuevoAutor,
+            nuevaSede,
+            nuevaCantidad,
+            nuevosDetalles,
+            nuevaEdicion,
+            nuevoAnioPublicacion,
+            nuevaImagen,
+            id,
+          ],
           (err) => {
             if (err) {
               console.log("Error al actualizar el libro:", err.message);
@@ -386,6 +434,64 @@ class Biblioteca {
           resolve(prestamo);
         });
       });
+    });
+  }
+
+  async listarResenas() {
+    const query = `SELECT * FROM resenas`;
+    return new Promise((resolve, reject) => {
+      db.all(query, (err, rows) => {
+        if (err) {
+          console.log("Ocurrio un error al obtener reseñas:", err.message);
+          return reject(err);
+        }
+        resolve(rows);
+      });
+    });
+  }
+
+  async listarResenasLibro(id) {
+    return new Promise((resolve, reject) => {
+      db.all(
+        `SELECT resenas.*, users.username AS username FROM resenas
+        LEFT JOIN users ON resenas.usuario = users.id
+        WHERE id_libro = ?`,
+        [id],
+        (err, resena) => {
+          if (err) {
+            console.log("Ocurrio un error al obtener la reseña", err.message);
+            return reject(err);
+          }
+          if (!resena) {
+            console.log("Reseña no encontrada");
+            return reject(new Error("Reseña no encontrada"));
+          }
+          resolve(resena);
+        }
+      );
+    });
+  }
+
+  async crearResena(id_libro, usuario, calificacion, comentario) {
+    const queryInsert = `
+    INSERT INTO resenas (id_libro, usuario, calificacion, comentario, fecha)
+    VALUES (?, ?, ?, ?, ?)
+  `;
+
+    return new Promise((resolve, reject) => {
+      const fechaActual = new Date().toISOString();
+      db.run(
+        queryInsert,
+        [id_libro, usuario, calificacion, comentario, fechaActual],
+        function (err) {
+          if (err) {
+            console.log("Ocurrio un error al crear la reseña:", err.message);
+            return reject(err);
+          }
+          console.log(`Reseña creada con el ID: ${this.lastID}`);
+          resolve(this.lastID);
+        }
+      );
     });
   }
 }
