@@ -47,4 +47,27 @@ router.post("/resenas/crearResena", async (req, res) => {
   }
 });
 
+router.delete("/resenas/:id", async (req, res) => {
+  const { id } = req.params;
+
+  if (!id) {
+    return res.status(400).json({ message: "Faltan campos por rellenar" });
+  }
+  try {
+    const deleteId = await biblioteca.eliminarResena(id);
+    res.status(201).json({ message: "La resena ha sido eliminada", deleteId });
+  } catch (err) {
+    if (err.message === "Resena no encontrada") {
+      return res.status(400).json({ message: "Resena no encontrada" });
+    } else {
+      res
+        .status(500)
+        .json({
+          message: "Ocurrio un error al eliminar la resena",
+          error: err.message,
+        });
+    }
+  }
+});
+
 module.exports = router;

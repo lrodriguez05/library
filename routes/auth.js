@@ -54,6 +54,7 @@ router.post("/login", async (req, res) => {
           username: user.username,
           name: user.name,
           last_name: user.last_name,
+          picture: user.picture,
         });
       } else {
         res.status(401).json({ message: "Usuario o contraseña incorrecta" });

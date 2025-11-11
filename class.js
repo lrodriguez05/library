@@ -5,43 +5,18 @@ class Biblioteca {
     this.nombre = nombre;
   }
 
-  async agregarLibro(
-    titulo,
-    autor,
-    id_sede,
-    cantidad,
-    detalles,
-    edicion,
-    anio_publicacion,
-    imagen
-  ) {
-    const query = `INSERT INTO libros (titulo, autor, prestado, id_sede, cantidad, detalles, edicion, anio_publicacion, imagen) VALUES (?, ?, 0, ?, ?, ?, ?, ?, ?)`;
+  async agregarLibro(titulo, autor, id_sede, cantidad) {
+    const query = `INSERT INTO libros (titulo, autor, prestado, id_sede, cantidad) VALUES (?, ?, 0, ?, ?)`;
 
     return new Promise((resolve, reject) => {
-      db.run(
-        query,
-        [
-          titulo,
-          autor,
-          id_sede,
-          cantidad,
-          detalles,
-          edicion,
-          anio_publicacion,
-          imagen,
-        ],
-        function (err) {
-          if (err) {
-            console.error(
-              "Ocurrio un error al agregar el libro: ",
-              err.message
-            );
-            return reject(err);
-          }
-          console.log(`Libro agregado con el ID: ${this.lastID}`);
-          resolve(this.lastID);
+      db.run(query, [titulo, autor, id_sede, cantidad], function (err) {
+        if (err) {
+          console.error("Ocurrio un error al agregar el libro: ", err.message);
+          return reject(err);
         }
-      );
+        console.log(`Libro agregado con el ID: ${this.lastID}`);
+        resolve(this.lastID);
+      });
     });
   }
 
@@ -132,17 +107,23 @@ class Biblioteca {
 
   async porId(id) {
     return new Promise((resolve, reject) => {
-      db.get(`SELECT * FROM libros WHERE id = ?`, [id], (err, libro) => {
-        if (err) {
-          console.log("Ocurrio un error al obtener el libro", err.message);
-          return reject(err);
+      db.get(
+        `SELECT libros.*, sedes.nombre AS sede FROM libros
+      LEFT JOIN sedes ON libros.id_sede = sedes.id
+       WHERE libros.id = ?`,
+        [id],
+        (err, libro) => {
+          if (err) {
+            console.log("Ocurrio un error al obtener el libro", err.message);
+            return reject(err);
+          }
+          if (!libro) {
+            console.log("Libro no encontrado");
+            return reject(new Error("Libro no encontrado"));
+          }
+          resolve(libro);
         }
-        if (!libro) {
-          console.log("Libro no encontrado");
-          return reject(new Error("Libro no encontrado"));
-        }
-        resolve(libro);
-      });
+      );
     });
   }
 
@@ -453,7 +434,7 @@ class Biblioteca {
   async listarResenasLibro(id) {
     return new Promise((resolve, reject) => {
       db.all(
-        `SELECT resenas.*, users.username AS username FROM resenas
+        `SELECT resenas.*, users.username AS username, users.picture as avatar FROM resenas
         LEFT JOIN users ON resenas.usuario = users.id
         WHERE id_libro = ?`,
         [id],
@@ -492,6 +473,30 @@ class Biblioteca {
           resolve(this.lastID);
         }
       );
+    });
+  }
+  async eliminarResena(id) {
+    const queryCheck = `SELECT * FROM resenas WHERE id = ?`;
+    return new Promise((resolve, reject) => {
+      db.get(queryCheck, [id], (err, resena) => {
+        if (err) {
+          console.log("Error en obtener resenas", err.message);
+          return reject(err);
+        }
+        if (!resena) {
+          console.log("Resena no encontrada");
+          return reject(new Error("Resena no encontrada"));
+        }
+
+        db.run(`DELETE FROM resenas WHERE id = ?`, [id], (err) => {
+          if (err) {
+            console.log("Error al eliminar resena", err.message);
+            return reject(err);
+          }
+          console.log("Resena eliminada");
+          resolve(true);
+        });
+      });
     });
   }
 }
