@@ -431,6 +431,28 @@ class Biblioteca {
     });
   }
 
+  async listarResenasUsuario(id) {
+    return new Promise((resolve, reject) => {
+      db.all(
+        `SELECT resenas.*, users.username AS username, users.picture as avatar FROM resenas
+        LEFT JOIN users ON resenas.usuario = users.id
+        WHERE usuario = ?`,
+        [id],
+        (err, resena) => {
+          if (err) {
+            console.log("Ocurrio un error al obtener la reseña", err.message);
+            return reject(err);
+          }
+          if (!resena) {
+            console.log("Reseña no encontrada");
+            return reject(new Error("Reseña no encontrada"));
+          }
+          resolve(resena);
+        }
+      );
+    });
+  }
+
   async listarResenasLibro(id) {
     return new Promise((resolve, reject) => {
       db.all(

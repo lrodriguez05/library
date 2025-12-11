@@ -16,6 +16,33 @@ router.get("/", async (req, res) => {
   }
 });
 
+router.patch("/changePassword/:id", async (req, res) => {
+  const { id } = req.params;
+  const { newPassword, oldPassword } = req.body;
+
+  if (!newPassword) {
+    return res.status(400).json({ message: "Faltan campos por rellenar" });
+  }
+  try {
+    const updatedUser = await userGestor.changeUserPassword(
+      id,
+      newPassword,
+      oldPassword
+    );
+    res
+      .status(201)
+      .json({ message: "Contraseña actualizada exitosamente", updatedUser });
+  } catch (err) {
+    if (err.message === "Usuario no encontrado") {
+      return res.status(400).json({ message: "Usuario no encontrado" });
+    }
+    res.status(500).json({
+      message: "Ocurrio un error al actualizar la contraseña",
+      error: err.message,
+    });
+  }
+});
+
 router.delete("/:id", async (req, res) => {
   const { id } = req.params;
 

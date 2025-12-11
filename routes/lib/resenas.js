@@ -13,6 +13,16 @@ router.get("/resenas", async (req, res) => {
   }
 });
 
+router.get("/resenas/usuario/:userId", async (req, res) => {
+  const { userId } = req.params;
+  try {
+    const resenas = await biblioteca.listarResenasUsuario(userId);
+    res.status(200).json({ message: `Resenas del usuario`, resenas });
+  } catch (err) {
+    res.status(500).json({ message: "Error al obtener el listado de resenas" });
+  }
+});
+
 router.get("/resenas/:id_libro", async (req, res) => {
   const { id_libro } = req.params;
   try {
@@ -60,12 +70,10 @@ router.delete("/resenas/:id", async (req, res) => {
     if (err.message === "Resena no encontrada") {
       return res.status(400).json({ message: "Resena no encontrada" });
     } else {
-      res
-        .status(500)
-        .json({
-          message: "Ocurrio un error al eliminar la resena",
-          error: err.message,
-        });
+      res.status(500).json({
+        message: "Ocurrio un error al eliminar la resena",
+        error: err.message,
+      });
     }
   }
 });
