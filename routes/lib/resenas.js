@@ -13,6 +13,16 @@ router.get("/resenas", async (req, res) => {
   }
 });
 
+router.get("/resenas/:id", async (req, res) => {
+  const { id } = req.params;
+  try {
+    const resena = await biblioteca.obtenerResena(id);
+    res.status(200).json({ message: `Resena del libro`, resena });
+  } catch (err) {
+    res.status(500).json({ message: "Error al obtener la resena" });
+  }
+});
+
 router.get("/resenas/usuario/:userId", async (req, res) => {
   const { userId } = req.params;
   try {
@@ -23,7 +33,34 @@ router.get("/resenas/usuario/:userId", async (req, res) => {
   }
 });
 
-router.get("/resenas/:id_libro", async (req, res) => {
+router.put("/resenas/editar/:id", async (req, res) => {
+  const { id } = req.params;
+  const { calificacion, comentario } = req.body;
+
+  if (!calificacion || !comentario) {
+    return res.status(400).json({ message: "Faltan campos por rellenar" });
+  }
+  try {
+    const updatedResena = await biblioteca.editarResena(
+      id,
+      calificacion,
+      comentario
+    );
+    res
+      .status(201)
+      .json({ message: "Resena actualizada exitosamente", updatedResena });
+  } catch (err) {
+    if (err.message === "Resena no encontrada") {
+      return res.status(400).json({ message: "Resena no encontrada" });
+    }
+    res.status(500).json({
+      message: "Ocurrio un error al actualizar la resena",
+      error: err.message,
+    });
+  }
+});
+
+router.get("/resenas/libro/:id_libro", async (req, res) => {
   const { id_libro } = req.params;
   try {
     const resenas = await biblioteca.listarResenasLibro(id_libro);

@@ -521,6 +521,63 @@ class Biblioteca {
       });
     });
   }
+  async obtenerResena(id) {
+    const queryCheck = `SELECT * FROM resenas WHERE id = ?`;
+    return new Promise((resolve, reject) => {
+      db.get(queryCheck, [id], (err, resena) => {
+        if (err) {
+          console.log("Ocurrio un error al obtener la reseña", err.message);
+          return reject(err);
+        }
+        if (!resena) {
+          console.log("Reseña no encontrada");
+          return reject(new Error("Reseña no encontrada"));
+        }
+        resolve(resena);
+      });
+    });
+  }
+
+  async editarResena(id, calificacion, comentario) {
+    const queryCheck = `SELECT * FROM resenas WHERE id = ?`;
+    const queryUpdate = `
+    UPDATE resenas 
+    SET calificacion = ?, comentario = ?, editado = 1
+    WHERE id = ?
+  `;
+
+    return new Promise((resolve, reject) => {
+      db.get(queryCheck, [id], (err, resena) => {
+        if (err) {
+          console.log("Error al buscar la resena:", err.message);
+          return reject(err);
+        }
+
+        if (!resena) {
+          console.log("Resena no encontrada");
+          return reject(new Error("Resena no encontrada"));
+        }
+
+        const nuevaCalificacion = calificacion;
+        const nuevoComentario = comentario;
+
+        db.run(queryUpdate, [nuevaCalificacion, nuevoComentario, id], (err) => {
+          if (err) {
+            console.log("Error al actualizar la resena:", err.message);
+            return reject(err);
+          }
+          resolve(
+            {
+              id: id,
+              calificacion: nuevaCalificacion,
+              comentario: nuevoComentario,
+            },
+            console.log("Resena actualizada correctamente")
+          );
+        });
+      });
+    });
+  }
 }
 
 module.exports = Biblioteca;
