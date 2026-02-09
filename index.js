@@ -4,6 +4,7 @@ require("dotenv").config();
 const authRoutes = require("./routes/auth");
 const libRoutes = require("./routes/lib/lib");
 const userRoutes = require("./routes/user/user");
+const aiRoutes = require("./routes/ai/ai");
 const {
   authenticateToken,
   authorizeRole,
@@ -20,6 +21,7 @@ app.use(express.json());
 app.use("/", authRoutes);
 app.use("/lib", authenticateToken, libRoutes);
 app.use("/users", authenticateToken, userRoutes);
+app.use("/ai", authenticateToken, aiRoutes);
 
 // Ruta de prueba
 app.get("/", (_, res) => {

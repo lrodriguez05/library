@@ -1,3 +1,4 @@
 node_modules
 .env
 biblioteca.db
+.DS_Store
